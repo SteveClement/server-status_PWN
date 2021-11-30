@@ -26,7 +26,9 @@ from bs4 import BeautifulSoup
 try:
     import requests.packages.urllib3
     requests.packages.urllib3.disable_warnings()
+    print("Disabling SSL warnings")
 except:
+    print("Disabling SSL warnings FAILED")
     pass
 
 parser = argparse.ArgumentParser()
@@ -46,6 +48,11 @@ parser.add_argument("--db", dest="db",
                     (Default: /tmp/server-status_PWN.db).",
                     action='store',
                     default='/tmp/server-status_PWN.db')
+parser.add_argument("--ua", dest="user_agent",
+                    help="User Agent. \
+                    (Default: server-status_PWN (https://github.com/mazen160/server-status_PWN)).",
+                    action='store',
+                    default='server-status_PWN (https://github.com/mazen160/server-status_PWN)')
 parser.add_argument("-o", "--output",
                     dest="output_path",
                     help="Saves output constantly\
@@ -69,6 +76,7 @@ args = parser.parse_args()
 url = args.url if args.url else ''
 sleeping_time = args.sleeping_time if args.sleeping_time else ''
 db = args.db if args.db else ''
+user_agent = args.user_agent 
 output_path = args.output_path if args.output_path else ''
 enable_full_logging = args.enable_full_logging
 enable_debug = args.enable_debug
@@ -103,7 +111,8 @@ class Request_Handler():
     Manually modify the __init__ variables for customzing.
     """
     def __init__(self):
-        self.user_agent = 'server-status_PWN (https://github.com/mazen160/server-status_PWN)'
+        global user_agent
+        self.user_agent = user_agent
         self.timeout = '3'
         self.origin_ip = '127.0.0.1'
         self.additional_headers = {}
@@ -193,7 +202,8 @@ class Response_Handler():
                     try:
                         REQUEST_URI = soup.findChildren('table')[table_index_id].findChildren('tr')[_].findChildren('td')[REQUEST_URI_index_id].getText().split(' ')[1]
                     except Exception as e:
-                        Exception_Handler(e)
+                        if not str(e) == "list index out of range":
+                            Exception_Handler(e)
                         REQUEST_URI = ''
                     try:
                         if (VHOST == REQUEST_URI == ''):
